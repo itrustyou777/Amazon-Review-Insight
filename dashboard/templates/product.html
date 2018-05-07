@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% block title %} Product {% endblock %}
+{% block content %}
+
+<ol class="breadcrumb">
+  <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+  <li class="breadcrumb-item active">Product ASIN {{ product[0] }}</li>
+</ol>
+
+<div id="productDescription">
+<img class="rounded mx-auto d-block" src="{{ product[3] }}">
+
+<h2>{{ product[5] }} <small>${{ product[4] }}</small></h2>
+
+<p class="text-viewer">
+{{ product[2] }}
+</p>
+</div>
+
+<div class="reviewBarChart">
+    <canvas id="canvas" height=100></canvas>
+</div>
+
+<h3>Reviews</h3>
+
+<div id="reviews">
+
+
+<form class="form" method="get" action="/products/{{ product[0] }}">
+  <div class="form-row">
+    <div class="col col-sm-8">
+        <label for="q" class="sr-only">Reviews search query</label>
+        <input type="text" class="form-control" id="q" name="q" value="{{ q }}" placeholder="Reviews search query">
+    </div>
+    <div class="col col-sm-2">
+        <select class="form-control" name="topic">
+            <option name=''>Any Topic</option>
+            {% for t in topic_names %}
+            <option {% if topic == t %}selected{% endif %} name="{{ t }}">
+                {{ t }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+      <div class="col col-sm-2">
+        <button type="submit" class="btn btn-primary">
+            <span class="fa fa-search" aria-hidden="true"></span> Search
+        </button>
+      </div>
+  </div>
+</form>
+
+<br>
+
+
+<ul class="list-unstyled">    
+{% for review in reviews %}
+<li>
+
+{% for i in range(review[1]|int) %}
+<span class="fa fa-star checked"></span>
+{% endfor %}
+
+{% for i in range((5 - review[1])|int) %}
+<span class="fa fa-star"></span>
+{% endfor %}
+
+<strong>{{ review[3] }}</strong>
+<small>{{ review[4] }}</small>
+<p class="text-viewer">
+{{ review[2] }}
+</p>
+</li>
+{% endfor %}
+<ul>
+
+
+{% endblock %}
+
+{% block js %}
+
+<script>
+
+window.chartColors = {
+	red: 'rgb(255, 99, 132)',
+	green: 'rgb(75, 192, 192)',
+	orange: 'rgb(255, 159, 64)',
+	yellow: 'rgb(255, 205, 86)',
+	blue: 'rgb(54, 162, 235)',
+	purple: 'rgb(153, 102, 255)',
+	grey: 'rgb(201, 203, 207)'
+};
+
+var topicDistribution =  {{ topics_sentiment | tojson | safe }}
+var dataset = {};
+var topics = [];
+var color = 0;
+
+for (let topic of topicDistribution) {
+	let name = topic[0];
+	let sentiment = topic[1];
+	let value = topic[2];
+
+	if ($.inArray(name, topics) == -1) {
+		topics.push(name);
+	}
+
+	if (!(sentiment in dataset)) {
+		dataset[sentiment] = {
+			label: sentiment,
+			backgroundColor: Object.values(window.chartColors)[color],
+			data: []
+		};
+		color++;
+	}
+
+	dataset[sentiment]['data'][topics.indexOf(name)] = value;
+}
+
+var barChartData = {
+	labels: topics,
+	datasets: Object.values(dataset)
+};
+
+window.onload = function() {
+	var that = this;
+	var ctx = document.getElementById('canvas').getContext('2d');
+	that.chart = new Chart(ctx, {
+		type: 'horizontalBar',
+		data: barChartData,
+		options: {
+			title: {
+				display: false,
+				text: 'Reviews Topics'
+			},
+			tooltips: {
+				mode: 'index',
+				intersect: false
+			},
+			options: {
+				maintainAspectRatio: false,
+			},
+			animation: false,
+			responsive: true,
+			scales: {
+				xAxes: [{
+					stacked: true,
+				}],
+				yAxes: [{
+					stacked: true
+				}]
+			}
+		}
+	});
+};
+</script>
+
+{% endblock %}
+

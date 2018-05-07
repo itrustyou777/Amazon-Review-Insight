@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %} Home {% endblock %}
+{% block content %}
+
+<ol class="breadcrumb">
+  <li class="breadcrumb-item active">Topics</li>
+</ol>
+
+<form class="form" id="saveTopics" method="post" action="/topics">
+	<div class="container">
+		<div class="row">
+			<div class="col-">
+				<button type="submit" id="saveTopicisBtn" class="btn btn-primary">
+					<span class="fa fa-save" aria-hidden="true"></span>  Save
+				</button>
+			</div>
+			<div class="col-sm">
+				{% if message %}
+				<div class="alert alert-success alert-dismissible fade show" role="alert">
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+					{{ message }}
+				</div>
+				{% endif %}
+			</div>
+		</div>
+	</div>
+
+	<textarea name="json" style="display: none">
+		{{ json_obj | tojson | escape }}
+	</textarea>
+</form>
+
+<div id="jsoneditor"></div>
+
+
+{% endblock %}
+
+{% block js %}
+
+<script>
+// create the editor
+var container = document.getElementById("jsoneditor");
+var options = {
+    mode: 'tree',
+    modes: ['code', 'tree'] // allowed modes
+};
+var editor = new JSONEditor(container, options);
+
+var json = {{ json_obj | tojson | escape }};
+editor.set(json);
+
+$('#saveTopics').submit(function () {
+	$('#saveTopics textarea').val(editor.getText());
+});
+
+</script>
+
+{% endblock %}
+

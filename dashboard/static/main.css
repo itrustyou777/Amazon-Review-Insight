@@ -1,0 +1,48 @@
+/* Show it is fixed to the top */
+
+body .navbar {
+	height: 45px;
+	margin-bottom: 10px;
+}
+
+body .breadcrumb {
+	padding: 5px 10px;
+}
+
+.more, .less {
+    font-weight: 600;
+    color: #000;
+    text-decoration:none;
+}
+
+.text-viewer {
+    height: 42px;
+    overflow: hidden;
+}
+
+#productDescription img {
+    float: right;
+    width: 100px;
+    margin: 0 10px;
+}
+
+.reviewBarChart {
+    width: 70%;
+    height: 200;
+}
+
+.checked {
+    color: orange;
+}
+
+#saveTopics .alert {
+    padding: 6px 10px;
+}
+
+#saveTopics .alert .close {
+    padding: 6px 10px !important;
+}
+
+#saveTopics .row {
+    height: 54px;
+}

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %} Home {% endblock %}
+{% block content %}
+
+<ol class="breadcrumb">
+  <li class="breadcrumb-item">Home</li>
+</ol>
+
+<form class="form" method="get" action="/">
+  <div class="form-row">
+    <div class="col col-sm-8">
+        <label for="q" class="sr-only">Product search query</label>
+        <input type="text" class="form-control" id="q" name="q" value="{{ q }}" placeholder="Product search query">
+    </div>
+      <div class="col col-sm-2">
+        <button type="submit" class="btn btn-primary">
+            <span class="fa fa-search" aria-hidden="true"></span> Search
+        </button>
+      </div>
+  </div>
+</form>
+
+<br />
+
+{% if products %}
+<h2>Products</h2>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th scope="col">#</th>
+      <th scope="col">Name</th>
+      <th scope="col">Price</th>
+      <th scope="col">Image</th>
+    </tr>
+  </thead>
+  <tbody>
+{% for product in products %}
+    <tr>
+      <th scope="row">{{ loop.index }}</th>
+      <td><a href="{{ url_for('products', asin=product[0]) }}">{{ product[5] }}</a></td>
+      <td>{{ product[4] }}</td>
+      <td><img class="rounded mx-auto d-block" width="100" src="{{ product[3] }}"></td>
+    </tr>
+{% endfor %}
+  </tbody>
+</table>
+
+{% endif %}
+
+{% endblock %}
+
