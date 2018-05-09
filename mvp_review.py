@@ -13,18 +13,20 @@ sc = SparkContext.getOrCreate()
 sqlContext = SQLContext(sc)
 
 # READ products Json files into a DataFrame
-products_df = sqlContext.read.json("s3a://amazon-review-insight/products_small.json")
-products_df = products_df.toDF("asin", "brand", "categories", "description", "imUrl",
+products_df = sqlContext.read.option("mode", "DROPMALFORMED").json("s3a://amazon-review-insight/metadata.json")
+products_df = products_df.toDF("asin", "brand", "categories", "description", "imgUrl",
                                "price", "related", "salesRank", "title")
 
 # Clean data which doesn't have Asin
 clean_products_df = products_df.where(products_df.asin.isNotNull()).drop("categories", "related", "salesRank")
 
 # toPandas() : bring back data to master node, and save it as csv file with Pandas data frame. found it on stackoverflow
-clean_products_df.toPandas().to_csv('products.csv', index=False)
+#clean_products_df.toPandas().to_csv('products.csv', index=False)
+# write the data to S3 to avoid storing everything in the Master memory
+clean_products_df.write.csv('s3a://amazon-review-insight/products_csv', mode='overwrite', header=False)
 
 # READ review Json files into a DataFrame
-reviews_df = sqlContext.read.json("s3a://amazon-review-insight/reviews_small.json")
+reviews_df = sqlContext.read.option("mode", "DROPMALFORMED").json("s3a://amazon-review-insight/item_dedup.json")
 reviews_df = reviews_df.toDF("reviewAsin", "helpful", "overall", "reviewText", "reviewTime",
                              "reviewerID", "reviewerName", "summary", "unixReviewTime")
 
@@ -33,7 +35,9 @@ clean_reviews_df = reviews_df.where(reviews_df.reviewAsin.isNotNull() &
                                     reviews_df.reviewerID.isNotNull()).drop("helpful", "unixReviewTime")
 
 # toPandas() : bring back data to master node, and save it as csv file with Pandas data frame. found it on stackoverflow
-clean_reviews_df.toPandas().to_csv('reviews.csv', index=False)
+# clean_reviews_df.toPandas().to_csv('reviews.csv', index=False)
+# write the data to S3 to avoid storing everything in the Master memory
+clean_reviews_df.write.csv('s3a://amazon-review-insight/reviews_csv', mode='overwrite', header=False)
 
 
 def toCategories(row):
@@ -64,7 +68,8 @@ product_categories_df = products_df.rdd.flatMap(toCategories).toDF().toDF("asin"
 clean_product_categories_df = product_categories_df.where(product_categories_df.asin.isNotNull() &
                                                         product_categories_df.category.isNotNull()).dropDuplicates()
 
-clean_product_categories_df.toPandas().to_csv('product_categories.csv', index=False)
+#clean_product_categories_df.toPandas().to_csv('product_categories.csv', index=False)
+clean_product_categories_df.write.csv('s3a://amazon-review-insight/product_categories_csv', mode='overwrite', header=False)
 
 #simple pattern mathing.
 reviews_topics_rules = {
@@ -95,5 +100,6 @@ def toTopic(row):
 
 reviews_topics_df = clean_reviews_df.rdd.flatMap(toTopic).toDF().toDF('reviewAsin', 'reviewerID', 'topic')
 clean_reviews_topics_df = reviews_topics_df.dropDuplicates()
-clean_reviews_topics_df.toPandas().to_csv('review_topics.csv', index=False)
+#clean_reviews_topics_df.toPandas().to_csv('review_topics.csv', index=False)
+clean_reviews_topics_df.write.csv('s3a://amazon-review-insight/reviews_topics_csv', mode='overwrite', header=False)
 

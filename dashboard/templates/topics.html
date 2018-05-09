@@ -44,7 +44,8 @@
 var container = document.getElementById("jsoneditor");
 var options = {
     mode: 'tree',
-    modes: ['code', 'tree'] // allowed modes
+    modes: ['code', 'tree'], // allowed modes
+    collapsed: false
 };
 var editor = new JSONEditor(container, options);
 

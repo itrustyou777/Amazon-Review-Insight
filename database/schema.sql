@@ -2,7 +2,6 @@
 
 CREATE TABLE public.product_categories (
     asin character(15) NOT NULL,
-    "salesRank" numeric(10,1),
     category character varying NOT NULL
 );
 
@@ -12,7 +11,9 @@ CREATE TABLE public.products (
     description text,
     "imgUrl" character varying,
     price numeric(12,2),
-    title character varying
+    title character varying,
+    reviewCount integer,
+    avgOverall decimal(10, 2)
 );
 
 CREATE TABLE public.review_topics (
@@ -21,8 +22,8 @@ CREATE TABLE public.review_topics (
     topic character varying NOT NULL
 );
 
-
 CREATE TABLE public.reviews (
+    id serial,
     "reviewerName" character varying,
     overall real,
     "reviewText" text,
@@ -31,21 +32,3 @@ CREATE TABLE public.reviews (
     asin character(15) NOT NULL,
     "reviewerID" character(50) NOT NULL
 );
-
--- Constrains
-
-ALTER TABLE ONLY public.product_categories
-    ADD CONSTRAINT product_categories_pkey PRIMARY KEY (asin, category);
-
-
-ALTER TABLE ONLY public.products
-    ADD CONSTRAINT products_pkey PRIMARY KEY (asin);
-
-
-ALTER TABLE ONLY public.review_topics
-    ADD CONSTRAINT review_topics_pkey PRIMARY KEY (asin, "reviewerID", topic);
-
-
-ALTER TABLE ONLY public.reviews
-    ADD CONSTRAINT reviews_pkey PRIMARY KEY ("reviewerID", asin);
-

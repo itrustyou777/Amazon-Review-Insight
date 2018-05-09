@@ -38,7 +38,7 @@
 {% for product in products %}
     <tr>
       <th scope="row">{{ loop.index }}</th>
-      <td><a href="{{ url_for('products', asin=product[0]) }}">{{ product[5] }}</a></td>
+      <td><a href="{{ url_for('products', asin=product[0]|trim) }}">{{ product[5] }}</a></td>
       <td>{{ product[4] }}</td>
       <td><img class="rounded mx-auto d-block" width="100" src="{{ product[3] }}"></td>
     </tr>

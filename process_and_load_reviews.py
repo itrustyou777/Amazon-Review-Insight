@@ -9,12 +9,17 @@ from pyspark.sql import SparkSession, SQLContext, Row
 from pyspark.sql.functions import to_timestamp, regexp_replace
 from pyspark.sql.types import *
 
-password = os.environ['RDS_PASSWORD']
+# Database Connection
+rds_host = os.environ['RDS_HOST']
+rds_port = os.environ['RDS_PORT']
+rds_db = os.environ['RDS_DB']
+rds_user = os.environ['RDS_USER']
+rds_password = os.environ['RDS_PASSWORD']
 
 mode = "append"
-url = "jdbc:postgresql://insight.c0lqcrqaigco.us-east-1.rds.amazonaws.com:5432/amazon_review_insight"
-properties = {"user": "mijik", "password": password, "driver": "org.postgresql.Driver"}
-null = u'\u0000'
+url = "jdbc:postgresql://{host}:{port}/{db}".format(host=rds_host, port=rds_port, db=rds_db)
+properties = {"user": rds_user, "password": rds_password, "driver": "org.postgresql.Driver"}
+
 
 sc = SparkContext.getOrCreate()
 sqlContext = SQLContext(sc)
@@ -39,6 +44,7 @@ reviews_df = reviews_df.toDF("asin", "helpful", "overall", "reviewText", "review
 # to_timestamp parses the date so that it's correctly loaded in postgres
 reviews_df = reviews_df.withColumn("reviewTime", to_timestamp(reviews_df['reviewTimeStr'], 'MM dd,yyyy'))
 
+null = u'\u0000'
 reviews_df = reviews_df.withColumn('reviewText', regexp_replace(reviews_df['reviewText'], null, ''))
 reviews_df = reviews_df.withColumn('summary', regexp_replace(reviews_df['summary'], null, ''))
 reviews_df = reviews_df.withColumn('reviewerName', regexp_replace(reviews_df['reviewerName'], null, ''))

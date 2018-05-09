@@ -46,3 +46,7 @@ body .breadcrumb {
 #saveTopics .row {
     height: 54px;
 }
+
+#jsoneditor {
+    height: 400px;
+}

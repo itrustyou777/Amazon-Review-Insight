@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, g
 import db
 import boto3
 import json
+import re
 
 app = Flask(__name__)
 
@@ -12,15 +13,14 @@ def index():
     products = []
 
     if q:
+	query = ' & '.join(re.split('\s+', q.strip()))
         conn = db.get_conn() 
-        cursor = conn.cursor()
-        cursor.execute("""
-                        select *
+        products = db.fetchall(conn, """
+			select *
                         from products p 
-                        where title ilike '%{q}%' or brand ilike '%{q}%'
-                        order by title
-                       """.format(q=q))
-        products = cursor.fetchall()
+                        where to_tsvector('english', title) @@ to_tsquery('english', '{query}')
+                        limit 15 
+                       """.format(query=query))
 
     return render_template('index.html', q=q, products=products)
 
@@ -56,7 +56,9 @@ def products(asin):
     filters = "where r.asin = '{}'".format(asin)
 
     if q:
-        filters += """ and ("reviewText" ilike '%{}%' or summary ilike '%{}%')""".format(q, q)
+	query = ' & '.join(re.split('\s+', q.strip()))
+        filters += """ and to_tsvector('english', summary || ' ' || "reviewText") @@ to_tsquery('english', '{query}')
+""".format(query=query)
 
     if topic:
     	filters = 'join review_topics t on t.asin = r.asin and t."reviewerID" = r."reviewerID" ' + filters

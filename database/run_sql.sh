@@ -1,0 +1,2 @@
+#!/bin/sh
+PGPASSWORD=$RDS_PASSWORD psql -h $RDS_HOST -p $RDS_PORT -U $RDS_USER $RDS_DB -w < $1

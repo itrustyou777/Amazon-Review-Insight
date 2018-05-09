@@ -12,10 +12,12 @@
 
 <h2>{{ product[5] }} <small>${{ product[4] }}</small></h2>
 
+{#
 <p class="text-viewer">
 {{ product[2] }}
 </p>
 </div>
+#}
 
 <div class="reviewBarChart">
     <canvas id="canvas" height=100></canvas>
@@ -34,9 +36,9 @@
     </div>
     <div class="col col-sm-2">
         <select class="form-control" name="topic">
-            <option name=''>Any Topic</option>
+            <option value=''>Any Topic</option>
             {% for t in topic_names %}
-            <option {% if topic == t %}selected{% endif %} name="{{ t }}">
+            <option {% if topic == t %}selected{% endif %} value="{{ t }}">
                 {{ t }}
             </option>
             {% endfor %}
