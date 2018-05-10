@@ -8,7 +8,7 @@ import json
 
 from pyspark.context import SparkContext
 from pyspark.sql import SparkSession, SQLContext, Row
-from pyspark.sql.functions import to_timestamp, regexp_replace
+from pyspark.sql.functions import to_timestamp, regexp_replace, udf, explode
 from pyspark.sql.types import *
 
 # Spark objects
@@ -33,7 +33,8 @@ bucket.download_file('topic_rules.json', 'topic_rules.json')
 reviews_topics_rules = json.load(open('topic_rules.json')) 
 
 # Get the reviews
-reviews_df = sqlContext.read.option("mode", "DROPMALFORMED").option('charset', 'UTF-8').json("s3a://amazon-review-insight/item_dedup.json")
+#reviews_df = sqlContext.read.option("mode", "DROPMALFORMED").option('charset', 'UTF-8').json("s3a://amazon-review-insight/reviews_small.json")
+reviews_df = sqlContext.read.option("mode", "DROPMALFORMED").option('charset', 'UTF-8').json("s3a://amazon-review-insight/item_dedup.json").coalesce(200)
 reviews_df = reviews_df.toDF("asin", "helpful", "overall", "reviewText", "reviewTimeStr",
                              "reviewerID", "reviewerName", "summary", "unixReviewTime")
 """
@@ -48,24 +49,22 @@ reviews_df = sqlContext.read.jdbc(url=url,
 """
 
 # row = review
-def toTopic(row):
+def process_topics(reviewText):
     topics = set()
 
 # if any keywords are matching on reviewText, add to topics
     for topic, rules in reviews_topics_rules.items():
         for rule in rules:
-            if rule in row.reviewText:
+            if rule in reviewText:
                 topics.add(topic)
 
-    result = []
+    return list(topics)
 
-    for topic in topics:
-        result.append(Row(row.asin, row.reviewerID, topic))
+to_topic = udf(process_topics, ArrayType(StringType()))
 
-    return result
+reviews_topics_df = reviews_df.withColumn('topic', explode(to_topic(reviews_df.reviewText))).select('asin', 'reviewerID', 'topic')
 
-reviews_topics_df = reviews_df.rdd.flatMap(toTopic).toDF().toDF('asin', 'reviewerID', 'topic')
-clean_reviews_topics_df = reviews_topics_df.where(reviews_topics_df.asin.isNotNull() & 
-                                                  reviews_topics_df.reviewerID.isNotNull() & 
-                                                  reviews_topics_df.topic.isNotNull()).dropDuplicates()
-clean_reviews_topics_df.write.jdbc(url=url, table='review_topics_tmp', mode=mode, properties=properties)
+#clean_reviews_topics_df = reviews_topics_df.where(reviews_topics_df.asin.isNotNull() & 
+#                                                  reviews_topics_df.reviewerID.isNotNull() & 
+#                                                  reviews_topics_df.topic.isNotNull())
+reviews_topics_df.write.jdbc(url=url, table='review_topics_tmp', mode=mode, properties=properties)

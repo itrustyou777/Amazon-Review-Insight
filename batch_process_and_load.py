@@ -6,7 +6,7 @@ import itertools
 
 from pyspark.context import SparkContext
 from pyspark.sql import SparkSession, SQLContext, Row
-from pyspark.sql.functions import to_timestamp, regexp_replace
+from pyspark.sql.functions import to_timestamp, regexp_replace, udf
 from pyspark.sql.types import *
 
 # Spark objects
@@ -40,6 +40,9 @@ reviews_df = reviews_df.withColumn('reviewText', regexp_replace(reviews_df['revi
 reviews_df = reviews_df.withColumn('summary', regexp_replace(reviews_df['summary'], null, ''))
 reviews_df = reviews_df.withColumn('reviewerName', regexp_replace(reviews_df['reviewerName'], null, ''))
 
+sentiment = udf(lambda overall: 0 if overall <= 3 else 1, IntegerType())
+reviews_df = reviews_df.withColumn('sentiment', sentiment(reviews_df.overall))
+
 clean_reviews_df = reviews_df.where(reviews_df.asin.isNotNull() &
                                     reviews_df.reviewerID.isNotNull()).drop("helpful", "unixReviewTime", "reviewTimeStr")
 
@@ -55,7 +58,7 @@ agg_reviews_df = clean_reviews_df.groupBy('asin').agg({'overall': 'avg', '*': 'c
 products_df = sqlContext.read.option("mode", "DROPMALFORMED").option('charset', 'UTF-8').json("s3a://amazon-review-insight/metadata.json")
 products_df = products_df.toDF("asin", "brand", "categories", "description", "imgUrl",
                                "price", "related", "salesRank", "title")
-clean_products_df = products_df.where(products_df.asin.isNotNull()).join(agg_reviews_df, products_df.asin == agg_reviews_df.aggAsin)
+clean_products_df = products_df.where(products_df.asin.isNotNull()).join(agg_reviews_df, products_df.asin == agg_reviews_df.aggAsin).orderBy('reviewCount', ascending=False)
 
 clean_products_df.drop("categories", "related", "salesRank", "aggAsin").write.jdbc(url=url, table="products", mode=mode, properties=properties)
 

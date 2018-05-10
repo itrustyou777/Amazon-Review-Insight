@@ -1,11 +1,11 @@
 -- Tables
 
-CREATE TABLE public.product_categories (
+CREATE UNLOGGED TABLE public.product_categories (
     asin character(15) NOT NULL,
     category character varying NOT NULL
 );
 
-CREATE TABLE public.products (
+CREATE UNLOGGED TABLE public.products (
     asin character(15) NOT NULL,
     brand character varying,
     description text,
@@ -16,13 +16,13 @@ CREATE TABLE public.products (
     avgOverall decimal(10, 2)
 );
 
-CREATE TABLE public.review_topics (
+CREATE UNLOGGED TABLE public.review_topics (
     asin character(15) NOT NULL,
     "reviewerID" character(50) NOT NULL,
     topic character varying NOT NULL
 );
 
-CREATE TABLE public.reviews (
+CREATE UNLOGGED TABLE public.reviews (
     id serial,
     "reviewerName" character varying,
     overall real,
@@ -30,5 +30,6 @@ CREATE TABLE public.reviews (
     summary text,
     "reviewTime" date,
     asin character(15) NOT NULL,
-    "reviewerID" character(50) NOT NULL
+    "reviewerID" character(50) NOT NULL,
+    sentiment integer
 );
