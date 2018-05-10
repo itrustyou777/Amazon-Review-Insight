@@ -30,6 +30,8 @@
     <tr>
       <th scope="col">#</th>
       <th scope="col">Name</th>
+      <th scope="col">Rating</th>
+      <th scope="col">Reviews</th>
       <th scope="col">Price</th>
       <th scope="col">Image</th>
     </tr>
@@ -39,6 +41,8 @@
     <tr>
       <th scope="row">{{ loop.index }}</th>
       <td><a href="{{ url_for('products', asin=product[0]|trim) }}">{{ product[5] }}</a></td>
+      <td>{{ product[7] }}</td>
+      <td>{{ product[6] }}</td>
       <td>{{ product[4] }}</td>
       <td><img class="rounded mx-auto d-block" width="100" src="{{ product[3] }}"></td>
     </tr>

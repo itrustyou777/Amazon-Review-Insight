@@ -50,3 +50,7 @@ body .breadcrumb {
 #jsoneditor {
     height: 400px;
 }
+
+#processingProgress .progress {
+    margin-top: 12px;
+}

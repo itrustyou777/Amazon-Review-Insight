@@ -6,6 +6,7 @@
   <li class="breadcrumb-item active">Topics</li>
 </ol>
 
+
 <form class="form" id="saveTopics" method="post" action="/topics">
 	<div class="container">
 		<div class="row">
@@ -24,6 +25,13 @@
 				</div>
 				{% endif %}
 			</div>
+            <div class="col-sm" id="processingProgress">
+                <div class="progress">
+                    <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+                        <span class="sr-only"></span>
+                    </div>
+                </div>
+            </div>
 		</div>
 	</div>
 
@@ -34,16 +42,16 @@
 
 <div id="jsoneditor"></div>
 
-
 {% endblock %}
 
 {% block js %}
+<script src="{{ url_for('static',  filename='jsoneditor.min.js')}}"></script>
 
 <script>
 // create the editor
 var container = document.getElementById("jsoneditor");
 var options = {
-    mode: 'tree',
+    mode: 'code',
     modes: ['code', 'tree'], // allowed modes
     collapsed: false
 };
@@ -55,6 +63,17 @@ editor.set(json);
 $('#saveTopics').submit(function () {
 	$('#saveTopics textarea').val(editor.getText());
 });
+
+var i = 0;
+
+var counterBack = setInterval(function(){
+    i++;
+    if (i <= 200){
+        $('.progress-bar').css('width', (i / 2.0) +'%');
+    } else {
+        clearInterval(counterBack);
+    }
+}, 1000 * 1.5);
 
 </script>
 

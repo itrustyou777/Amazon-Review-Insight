@@ -3,11 +3,10 @@ import os
 from flask import g
 
 def get_conn():
-    dsn_database = "amazon_review_insight"
-    dsn_hostname = "insight.c0lqcrqaigco.us-east-1.rds.amazonaws.com"
-#    dsn_hostname = "micro-pg-test.c0lqcrqaigco.us-east-1.rds.amazonaws.com"
-    dsn_port = "5432"        
-    dsn_uid = "mijik"   
+    dsn_database = os.environ['RDS_DB']
+    dsn_hostname =  os.environ['RDS_HOST']
+    dsn_port = os.environ['RDS_PORT']
+    dsn_uid = os.environ['RDS_USER']
     dsn_pwd = os.environ['RDS_PASSWORD']
 
     conn_string = "host="+dsn_hostname+" port="+dsn_port+" dbname="+dsn_database+" user="+dsn_uid+" password="+dsn_pwd

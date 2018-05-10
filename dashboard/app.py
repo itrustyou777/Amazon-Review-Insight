@@ -36,7 +36,7 @@ def topics():
         json_obj = json.loads(request.form['json'])
         json.dump(json_obj, open('topic_rules.json', 'w'))
 	bucket.upload_file('topic_rules.json', 'topic_rules.json')
-	message = "Topic Rules Saved"
+	message = "Topic Rules Saved! Processing..."
 
     return render_template('topics.html', json_obj=json_obj, message=message)
     
@@ -64,10 +64,19 @@ def products(asin):
     	filters = 'join review_topics t on t.asin = r.asin and t."reviewerID" = r."reviewerID" ' + filters
 	filters += """ and t.topic = '{}'""".format(topic)
 
-    reviews = db.fetchall(conn, """
+    reviews_best = db.fetchall(conn, """
                     select *
                     from reviews r 
                     {filters}
+                    and overall > 3
+                    limit 10
+                    """.format(filters=filters))
+
+    reviews_worst = db.fetchall(conn, """
+                    select *
+                    from reviews r 
+                    {filters}
+                    and overall <= 3
                     limit 10
                     """.format(filters=filters))
 
@@ -85,14 +94,29 @@ def products(asin):
 		    group by topic, sentiment 
                     """.format(asin=asin))
 
+    reviews_time = db.fetchall(conn, """
+	select
+		case 
+		when overall > 3 then 'positive'
+		when overall <= 3 then 'negative'
+		end as sentiment,
+		to_char("reviewTime", 'YYYY-MM'),
+		count(*) 
+	from reviews r 
+	where r.asin = '{asin}'
+	group by sentiment, to_char("reviewTime", 'YYYY-MM')    
+    """.format(asin=asin))
+
     topic_names = set([t[0] for t in topics_sentiment])
 
     return render_template('product.html', topics_sentiment=topics_sentiment,
                                            product=product, 
-                                           reviews=reviews,
+                                           reviews_best=reviews_best,
+                                           reviews_worst=reviews_worst,
 					   topic_names=topic_names,
                                            q=q,
-                                           topic=topic)
+                                           topic=topic,
+					   reviews_time=reviews_time)
 
 @app.teardown_appcontext
 def close_db(error):

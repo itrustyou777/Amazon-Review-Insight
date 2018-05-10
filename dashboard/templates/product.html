@@ -10,7 +10,7 @@
 <div id="productDescription">
 <img class="rounded mx-auto d-block" src="{{ product[3] }}">
 
-<h2>{{ product[5] }} <small>${{ product[4] }}</small></h2>
+<h2>{{ product[5] }} <small>${{ product[4] }} <span class="fa fa-star checked"></span> {{ product[7] }}</small></h2>
 
 {#
 <p class="text-viewer">
@@ -18,10 +18,22 @@
 </p>
 </div>
 #}
-
-<div class="reviewBarChart">
-    <canvas id="canvas" height=100></canvas>
+<div class="container">
+	<div class="row">
+		<div class="col-md-6">
+<div>
+    <canvas id="canvasTopic" height=130></canvas>
 </div>
+		</div>
+		<div class="col-md-6">
+<div>
+    <canvas id="canvasTime" height=130></canvas>
+</div>
+		</div>
+	</div>
+</div>
+	
+
 
 <h3>Reviews</h3>
 
@@ -54,33 +66,62 @@
 
 <br>
 
-
+<div class="container">
+    <div class="row">
+        <div class="col-md-6">
+            <h4>Postive</h4>
 <ul class="list-unstyled">    
-{% for review in reviews %}
+{% for review in reviews_best %}
 <li>
 
-{% for i in range(review[1]|int) %}
+{% for i in range(review[2]|int) %}
 <span class="fa fa-star checked"></span>
 {% endfor %}
 
-{% for i in range((5 - review[1])|int) %}
+{% for i in range((5 - review[2])|int) %}
 <span class="fa fa-star"></span>
 {% endfor %}
 
-<strong>{{ review[3] }}</strong>
-<small>{{ review[4] }}</small>
+<strong>{{ review[4] }}</strong>
+<small>{{ review[5] }}</small>
 <p class="text-viewer">
-{{ review[2] }}
+{{ review[3] }}
 </p>
 </li>
 {% endfor %}
 <ul>
 
+        </div>
+        <div class="col-md-6">
+<h4>Negative</h4>
+        
+<ul class="list-unstyled">    
+{% for review in reviews_worst %}
+<li>
+
+{% for i in range(review[2]|int) %}
+<span class="fa fa-star checked"></span>
+{% endfor %}
+
+{% for i in range((5 - review[2])|int) %}
+<span class="fa fa-star"></span>
+{% endfor %}
+
+<strong>{{ review[4] }}</strong>
+<small>{{ review[5] }}</small>
+<p class="text-viewer">
+{{ review[3] }}
+</p>
+</li>
+{% endfor %}
+<ul>
+        </div>
+    </div>
+</div>
 
 {% endblock %}
 
 {% block js %}
-
 <script>
 
 window.chartColors = {
@@ -94,7 +135,7 @@ window.chartColors = {
 };
 
 var topicDistribution =  {{ topics_sentiment | tojson | safe }}
-var dataset = {};
+var topicDataset = {};
 var topics = [];
 var color = 0;
 
@@ -107,8 +148,8 @@ for (let topic of topicDistribution) {
 		topics.push(name);
 	}
 
-	if (!(sentiment in dataset)) {
-		dataset[sentiment] = {
+	if (!(sentiment in topicDataset)) {
+		topicDataset[sentiment] = {
 			label: sentiment,
 			backgroundColor: Object.values(window.chartColors)[color],
 			data: []
@@ -116,20 +157,20 @@ for (let topic of topicDistribution) {
 		color++;
 	}
 
-	dataset[sentiment]['data'][topics.indexOf(name)] = value;
+	topicDataset[sentiment]['data'][topics.indexOf(name)] = value;
 }
 
-var barChartData = {
+var topicBarChartData = {
 	labels: topics,
-	datasets: Object.values(dataset)
+	datasets: Object.values(topicDataset)
 };
 
-window.onload = function() {
+$(function() {
 	var that = this;
-	var ctx = document.getElementById('canvas').getContext('2d');
-	that.chart = new Chart(ctx, {
+	var ctx = $('#canvasTopic')[0].getContext('2d');
+	that.topicChart = new Chart(ctx, {
 		type: 'horizontalBar',
-		data: barChartData,
+		data: topicBarChartData,
 		options: {
 			title: {
 				display: false,
@@ -154,7 +195,70 @@ window.onload = function() {
 			}
 		}
 	});
+});
+
+var reviewsTime =  {{ reviews_time | tojson | safe }}
+var timeDataset = {};
+var times = [];
+var color = 0;
+
+for (let topic of reviewsTime) {
+	let name = topic[1];
+	let sentiment = topic[0];
+	let value = topic[2];
+
+	if ($.inArray(name, times) == -1) {
+		times.push(name);
+	}
+
+	if (!(sentiment in timeDataset)) {
+		timeDataset[sentiment] = {
+			label: sentiment,
+			backgroundColor: Object.values(window.chartColors)[color],
+			data: []
+		};
+		color++;
+	}
+
+	timeDataset[sentiment]['data'][times.indexOf(name)] = value;
+}
+
+var barChartData1 = {
+	labels: times,
+	datasets: Object.values(timeDataset)
 };
+
+$(function() {
+	var that = this;
+	var ctx = $('#canvasTime')[0].getContext('2d');
+	that.timeChart = new Chart(ctx, {
+		type: 'bar',
+		data: barChartData1,
+		options: {
+			title: {
+				display: false,
+				text: 'Reviews Time'
+			},
+			tooltips: {
+				mode: 'index',
+				intersect: false
+			},
+			options: {
+				maintainAspectRatio: false,
+			},
+			animation: false,
+			responsive: true,
+			scales: {
+				xAxes: [{
+					stacked: true,
+				}],
+				yAxes: [{
+					stacked: true
+				}]
+			}
+		}
+	});
+});
 </script>
 
 {% endblock %}
