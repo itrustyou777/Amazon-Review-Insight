@@ -34,19 +34,9 @@ reviews_topics_rules = json.load(open('topic_rules.json'))
 
 # Get the reviews
 #reviews_df = sqlContext.read.option("mode", "DROPMALFORMED").option('charset', 'UTF-8').json("s3a://amazon-review-insight/reviews_small.json")
-reviews_df = sqlContext.read.option("mode", "DROPMALFORMED").option('charset', 'UTF-8').json("s3a://amazon-review-insight/item_dedup.json").coalesce(200)
+reviews_df = sqlContext.read.option("mode", "DROPMALFORMED").option('charset', 'UTF-8').json("s3a://amazon-review-insight/item_dedup.json")
 reviews_df = reviews_df.toDF("asin", "helpful", "overall", "reviewText", "reviewTimeStr",
                              "reviewerID", "reviewerName", "summary", "unixReviewTime")
-"""
-# Reading from PostgresSQL is slow, better to go to S3 directly.
-reviews_df = sqlContext.read.jdbc(url=url, 
-				  table='reviews',
-				  column="id",
-				  lowerBound=0,
-			          upperBound=100000000,
-				  numPartitions=400, 
-				  properties=properties)
-"""
 
 # row = review
 def process_topics(reviewText):
@@ -64,7 +54,7 @@ to_topic = udf(process_topics, ArrayType(StringType()))
 
 reviews_topics_df = reviews_df.withColumn('topic', explode(to_topic(reviews_df.reviewText))).select('asin', 'reviewerID', 'topic')
 
-#clean_reviews_topics_df = reviews_topics_df.where(reviews_topics_df.asin.isNotNull() & 
-#                                                  reviews_topics_df.reviewerID.isNotNull() & 
-#                                                  reviews_topics_df.topic.isNotNull())
+#reviews_topics_df = reviews_topics_df.where(reviews_topics_df.asin.isNotNull() & 
+#					     reviews_topics_df.reviewerID.isNotNull() & 
+#					     reviews_topics_df.topic.isNotNull())
 reviews_topics_df.write.jdbc(url=url, table='review_topics_tmp', mode=mode, properties=properties)
