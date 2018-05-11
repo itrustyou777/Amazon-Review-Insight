@@ -1,7 +1,8 @@
 # Sets the required configuration for connecting to the database 
 # source this file
 
-export RDS_HOST=insight-test.c0lqcrqaigco.us-east-1.rds.amazonaws.com
+#export RDS_HOST=insight-test.c0lqcrqaigco.us-east-1.rds.amazonaws.com
+export RDS_HOST=insight.c0lqcrqaigco.us-east-1.rds.amazonaws.com
 export RDS_DB=amazon_review_insight
 export RDS_PORT=5432
 export RDS_USER=mijik

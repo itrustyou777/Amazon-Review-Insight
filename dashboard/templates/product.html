@@ -141,7 +141,7 @@ var color = 0;
 
 for (let topic of topicDistribution) {
 	let name = topic[0];
-	let sentiment = topic[1];
+	let sentiment = topic[1] == 0 ? 'negative' : 'positive';
 	let value = topic[2];
 
 	if ($.inArray(name, topics) == -1) {
@@ -202,10 +202,10 @@ var timeDataset = {};
 var times = [];
 var color = 0;
 
-for (let topic of reviewsTime) {
-	let name = topic[1];
-	let sentiment = topic[0];
-	let value = topic[2];
+for (let t of reviewsTime) {
+	let name = t[1];
+	let sentiment = t[0] == 0 ? 'negative' : 'positive';
+	let value = t[2];
 
 	if ($.inArray(name, times) == -1) {
 		times.push(name);

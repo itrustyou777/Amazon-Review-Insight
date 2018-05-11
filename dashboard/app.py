@@ -68,7 +68,7 @@ def products(asin):
                     select *
                     from reviews r 
                     {filters}
-                    and overall > 3
+                    and sentiment = 1
                     limit 10
                     """.format(filters=filters))
 
@@ -76,17 +76,14 @@ def products(asin):
                     select *
                     from reviews r 
                     {filters}
-                    and overall <= 3
+                    and sentiment = 0
                     limit 10
                     """.format(filters=filters))
 
     topics_sentiment = db.fetchall(conn, """
                      select 
 			    topic, 
-			    case 
-			    when overall > 3 then 'positive'
-			    when overall <= 3 then 'negative'
-			    end as sentiment,
+			    sentiment,
 			    count(*) 
 		    from review_topics t
 		    left join reviews r on t.asin = r.asin and t."reviewerID" = r."reviewerID"
@@ -96,15 +93,12 @@ def products(asin):
 
     reviews_time = db.fetchall(conn, """
 	select
-		case 
-		when overall > 3 then 'positive'
-		when overall <= 3 then 'negative'
-		end as sentiment,
-		to_char("reviewTime", 'YYYY-MM'),
+                sentiment,
+		(cast(extract(year from "reviewTime") as text) || '-' || cast(extract(month from "reviewTime") as text)) as t,
 		count(*) 
 	from reviews r 
 	where r.asin = '{asin}'
-	group by sentiment, to_char("reviewTime", 'YYYY-MM')    
+	group by sentiment, t
     """.format(asin=asin))
 
     topic_names = set([t[0] for t in topics_sentiment])
@@ -124,3 +118,6 @@ def close_db(error):
     if hasattr(g, 'db_conn'):
     	g.db_conn.close()
 
+
+if __name__ == '__main__':
+    app.run(threaded=True, debug=True, host="0.0.0.0")
