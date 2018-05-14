@@ -103,6 +103,14 @@ def products(asin):
 
     topic_names = set([t[0] for t in topics_sentiment])
 
+
+    def sort_key(row):
+        t = row[1].split('-')
+
+        return (int(t[0]), int(t[1]))
+
+    reviews_time = sorted(reviews_time, key=sort_key)
+
     return render_template('product.html', topics_sentiment=topics_sentiment,
                                            product=product, 
                                            reviews_best=reviews_best,
