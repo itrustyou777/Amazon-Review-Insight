@@ -18,9 +18,9 @@ def index():
         products = db.fetchall(conn, """
 			select *
                         from products p 
-                        where to_tsvector('english', title) @@ to_tsquery('english', '{query}')
+                        where to_tsvector('english', title) @@ to_tsquery('english', {query})
                         limit 15 
-                       """.format(query=query))
+                       """.format(query=db.quote(query)))
 
     return render_template('index.html', q=q, products=products)
 
@@ -47,22 +47,22 @@ def products(asin):
     product = db.fetchone(conn, """
                     select *
                     from products p 
-                    where asin = '{asin}'
-                    """.format(asin=asin))
+                    where asin = {asin}
+                    """.format(asin=db.quote(asin)))
     
     q = request.args.get("q", '')
     topic = request.args.get("topic", '')
 
-    filters = "where r.asin = '{}'".format(asin)
+    filters = "where r.asin = {}".format(db.quote(asin))
 
     if q:
 	query = ' & '.join(re.split('\s+', q.strip()))
-        filters += """ and to_tsvector('english', summary || ' ' || "reviewText") @@ to_tsquery('english', '{query}')
-""".format(query=query)
+        filters += """ and to_tsvector('english', summary || ' ' || "reviewText") @@ to_tsquery('english', {query})
+""".format(query=db.quote(query))
 
     if topic:
     	filters = 'join review_topics t on t.asin = r.asin and t."reviewerID" = r."reviewerID" ' + filters
-	filters += """ and t.topic = '{}'""".format(topic)
+	filters += """ and t.topic = {}""".format(db.quote(topic))
 
     reviews_best = db.fetchall(conn, """
                     select *
@@ -87,9 +87,9 @@ def products(asin):
 			    count(*) 
 		    from review_topics t
 		    left join reviews r on t.asin = r.asin and t."reviewerID" = r."reviewerID"
-		    where t.asin = '{asin}'
+		    where t.asin = {asin}
 		    group by topic, sentiment 
-                    """.format(asin=asin))
+                    """.format(asin=db.quote(asin)))
 
     reviews_time = db.fetchall(conn, """
 	select
@@ -97,9 +97,9 @@ def products(asin):
 		(cast(extract(year from "reviewTime") as text) || '-' || cast(extract(month from "reviewTime") as text)) as t,
 		count(*) 
 	from reviews r 
-	where r.asin = '{asin}'
+	where r.asin = {asin}
 	group by sentiment, t
-    """.format(asin=asin))
+    """.format(asin=db.quote(asin)))
 
     topic_names = set([t[0] for t in topics_sentiment])
 

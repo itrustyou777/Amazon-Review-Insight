@@ -1,4 +1,5 @@
 import psycopg2
+from psycopg2.extensions import adapt
 import os
 from flask import g
 
@@ -30,3 +31,8 @@ def fetchall(conn, query):
     cursor = conn.cursor()
     cursor.execute(query)
     return cursor.fetchall()
+
+
+def quote(x):
+    return adapt(x).getquoted()
+
