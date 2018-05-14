@@ -6,8 +6,8 @@ ALTER TABLE ONLY public.products
     ADD CONSTRAINT products_pkey PRIMARY KEY (asin);
 
 
-ALTER TABLE ONLY public.review_topics
-    ADD CONSTRAINT review_topics_pkey PRIMARY KEY (asin, "reviewerID", topic);
+--ALTER TABLE ONLY public.review_topics
+--    ADD CONSTRAINT review_topics_pkey PRIMARY KEY (asin, "reviewerID", topic);
 
 
 ALTER TABLE ONLY public.reviews

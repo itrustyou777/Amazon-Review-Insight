@@ -3,10 +3,11 @@ from __future__ import print_function
 import sys
 import os
 import itertools
+import random
 
 from pyspark.context import SparkContext
 from pyspark.sql import SparkSession, SQLContext, Row
-from pyspark.sql.functions import to_timestamp, regexp_replace, udf
+from pyspark.sql.functions import to_timestamp, regexp_replace, udf, explode
 from pyspark.sql.types import *
 
 # Spark objects
@@ -28,7 +29,7 @@ properties = {"user": rds_user, "password": rds_password, "driver": "org.postgre
 # Reviews processing and loading
 
 #reviews_df = sqlContext.read.option("mode", "DROPMALFORMED").option('charset', 'UTF-8').json("s3a://amazon-review-insight/reviews_small.json")
-reviews_df = sqlContext.read.option("mode", "DROPMALFORMED").option('charset', 'UTF-8').json("s3a://amazon-review-insight/item_dedup.json")
+reviews_df = sqlContext.read.option("mode", "DROPMALFORMED").option('charset', 'UTF-8').json("s3a://amazon-review-insight/item_dedup*.json")
 reviews_df = reviews_df.toDF("asin", "helpful", "overall", "reviewText", "reviewTimeStr",
                              "reviewerID", "reviewerName", "summary", "unixReviewTime")
 
@@ -50,12 +51,13 @@ clean_reviews_df = reviews_df.where(reviews_df.asin.isNotNull() &
 # write the data to S3 to avoid storing everything in the Master memory
 clean_reviews_df.write.jdbc(url=url, table='reviews', mode=mode, properties=properties)
 
-agg_reviews_df = clean_reviews_df.groupBy('asin').agg({'overall': 'avg', '*': 'count'}).toDF('aggAsin', 'avgOverall', 'reviewCount') 
+agg_reviews_df = clean_reviews_df.groupBy('asin').agg({'overall': 'sum', '*': 'count'}).toDF('aggAsin', 'sumOverall', 'reviewCount') 
+
 
 # Product processing and loading
 
 #products_df = sqlContext.read.option("mode", "DROPMALFORMED").option('charset', 'UTF-8').json("s3a://amazon-review-insight/products_small.json")
-products_df = sqlContext.read.option("mode", "DROPMALFORMED").option('charset', 'UTF-8').json("s3a://amazon-review-insight/metadata.json")
+products_df = sqlContext.read.option("mode", "DROPMALFORMED").option('charset', 'UTF-8').json("s3a://amazon-review-insight/metadata*.json")
 products_df = products_df.toDF("asin", "brand", "categories", "description", "imgUrl",
                                "price", "related", "salesRank", "title")
 clean_products_df = products_df.where(products_df.asin.isNotNull()).join(agg_reviews_df, products_df.asin == agg_reviews_df.aggAsin).orderBy('reviewCount', ascending=False)
@@ -64,24 +66,23 @@ clean_products_df.drop("categories", "related", "salesRank", "aggAsin").write.jd
 
 # Product categories processing and loading
 
-def toCategories(row):
+def process_categories(categories):
 # instead of [], set() to prevent duplicated values.
     result = set()
 
-    for category in (row.categories or []):
+    for category in (categories or []):
 	if len(category) > 0:
-    	    result.add(Row(row.asin, category[0]))
+    	    result.add(category[0])
 
     return list(result)
 # not possible to see the "result", those are on slave node
 
-# First toDF() is to creat DataFrame, Second toDF() is to name colums
-# flatMap is ID c1,c2,c3 -> ID c1, Id c2, Id c3.
-# products_df.rdd.flatMap(toCategories) is Row(_1=u'0001048791', _2=u'Books')
-product_categories_df = clean_products_df.rdd.flatMap(toCategories).toDF().toDF("asin", "category")
+to_categories = udf(process_categories, ArrayType(StringType()))
 
-# to delete duplicated values
+product_categories_df = clean_products_df.withColumn('category',
+        explode(to_categories(clean_products_df.categories))).select('asin', 'category')
+
 clean_product_categories_df = product_categories_df.where(product_categories_df.asin.isNotNull() &
-                                                          product_categories_df.category.isNotNull()).dropDuplicates()
+                                                          product_categories_df.category.isNotNull())
 
 clean_product_categories_df.write.jdbc(url=url, table='product_categories', mode=mode, properties=properties)

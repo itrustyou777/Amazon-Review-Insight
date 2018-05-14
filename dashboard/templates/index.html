@@ -43,7 +43,7 @@
       <td><a href="{{ url_for('products', asin=product[0]|trim) }}">{{ product[5] }}</a></td>
       <td>{{ product[7] }}</td>
       <td>{{ product[6] }}</td>
-      <td>{{ product[4] }}</td>
+      <td>{{ product[4] or 'N/A' }}</td>
       <td><img class="rounded mx-auto d-block" width="100" src="{{ product[3] }}"></td>
     </tr>
 {% endfor %}

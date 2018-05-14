@@ -10,7 +10,7 @@
 <div id="productDescription">
 <img class="rounded mx-auto d-block" src="{{ product[3] }}">
 
-<h2>{{ product[5] }} <small>${{ product[4] }} <span class="fa fa-star checked"></span> {{ product[7] }}</small></h2>
+<h2>{{ product[5] }} <small>${{ product[4] or 'N/A' }} <span class="fa fa-star checked"></span> {{ product[7] }}</small></h2>
 
 {#
 <p class="text-viewer">
@@ -139,6 +139,18 @@ var topicDataset = {};
 var topics = [];
 var color = 0;
 
+topicDataset['positive'] = {
+    label: 'positive',
+    backgroundColor: Object.values(window.chartColors)[1],
+    data: []
+};
+
+topicDataset['negative'] = {
+    label: 'negative',
+    backgroundColor: Object.values(window.chartColors)[0],
+    data: []
+};
+
 for (let topic of topicDistribution) {
 	let name = topic[0];
 	let sentiment = topic[1] == 0 ? 'negative' : 'positive';
@@ -146,15 +158,6 @@ for (let topic of topicDistribution) {
 
 	if ($.inArray(name, topics) == -1) {
 		topics.push(name);
-	}
-
-	if (!(sentiment in topicDataset)) {
-		topicDataset[sentiment] = {
-			label: sentiment,
-			backgroundColor: Object.values(window.chartColors)[color],
-			data: []
-		};
-		color++;
 	}
 
 	topicDataset[sentiment]['data'][topics.indexOf(name)] = value;
@@ -202,6 +205,18 @@ var timeDataset = {};
 var times = [];
 var color = 0;
 
+timeDataset['positive'] = {
+    label: 'positive',
+    backgroundColor: Object.values(window.chartColors)[1],
+    data: []
+};
+
+timeDataset['negative'] = {
+    label: 'negative',
+    backgroundColor: Object.values(window.chartColors)[0],
+    data: []
+};
+
 for (let t of reviewsTime) {
 	let name = t[1];
 	let sentiment = t[0] == 0 ? 'negative' : 'positive';
@@ -223,7 +238,7 @@ for (let t of reviewsTime) {
 	timeDataset[sentiment]['data'][times.indexOf(name)] = value;
 }
 
-var barChartData1 = {
+var timeChartData = {
 	labels: times,
 	datasets: Object.values(timeDataset)
 };
@@ -233,7 +248,7 @@ $(function() {
 	var ctx = $('#canvasTime')[0].getContext('2d');
 	that.timeChart = new Chart(ctx, {
 		type: 'bar',
-		data: barChartData1,
+		data: timeChartData,
 		options: {
 			title: {
 				display: false,

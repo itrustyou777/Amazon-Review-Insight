@@ -13,8 +13,9 @@ CREATE UNLOGGED TABLE public.products (
     price numeric(12,2),
     title character varying,
     reviewCount integer,
-    avgOverall decimal(10, 2)
+    sumOverall decimal(10, 2)
 );
+
 
 CREATE UNLOGGED TABLE public.review_topics (
     asin character(15) NOT NULL,
