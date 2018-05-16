@@ -29,9 +29,13 @@ properties = {"user": rds_user, "password": rds_password, "driver": "org.postgre
 # Reviews processing and loading
 
 #reviews_df = sqlContext.read.option("mode", "DROPMALFORMED").option('charset', 'UTF-8').json("s3a://amazon-review-insight/reviews_small.json")
-reviews_df = sqlContext.read.option("mode", "DROPMALFORMED").option('charset', 'UTF-8').json("s3a://amazon-review-insight/item_dedup*.json")
+reviews_df = sqlContext.read.option("mode", "DROPMALFORMED").option('charset', 'UTF-8').json("s3a://amazon-review-insight/item_dedup.json")
 reviews_df = reviews_df.toDF("asin", "helpful", "overall", "reviewText", "reviewTimeStr",
                              "reviewerID", "reviewerName", "summary", "unixReviewTime")
+
+# Cache the reviews data in parquet for the incremental processing
+reviews_df.select("asin", "reviewText", "reviewerID").coalesce(200).write.parquet("s3a://amazon-review-insight/reviews_for_topics_cache", mode='overwrite')
+
 
 # to_timestamp parses the date so that it's correctly loaded in postgres
 reviews_df = reviews_df.withColumn("reviewTime", to_timestamp(reviews_df['reviewTimeStr'], 'MM dd,yyyy'))
@@ -57,7 +61,7 @@ agg_reviews_df = clean_reviews_df.groupBy('asin').agg({'overall': 'sum', '*': 'c
 # Product processing and loading
 
 #products_df = sqlContext.read.option("mode", "DROPMALFORMED").option('charset', 'UTF-8').json("s3a://amazon-review-insight/products_small.json")
-products_df = sqlContext.read.option("mode", "DROPMALFORMED").option('charset', 'UTF-8').json("s3a://amazon-review-insight/metadata*.json")
+products_df = sqlContext.read.option("mode", "DROPMALFORMED").option('charset', 'UTF-8').json("s3a://amazon-review-insight/metadata.json")
 products_df = products_df.toDF("asin", "brand", "categories", "description", "imgUrl",
                                "price", "related", "salesRank", "title")
 clean_products_df = products_df.where(products_df.asin.isNotNull()).join(agg_reviews_df, products_df.asin == agg_reviews_df.aggAsin).orderBy('reviewCount', ascending=False)

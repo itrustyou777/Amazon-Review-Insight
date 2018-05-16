@@ -33,10 +33,7 @@ bucket.download_file('topic_rules.json', 'topic_rules.json')
 reviews_topics_rules = json.load(open('topic_rules.json')) 
 
 # Get the reviews
-#reviews_df = sqlContext.read.option("mode", "DROPMALFORMED").option('charset', 'UTF-8').json("s3a://amazon-review-insight/reviews_small.json")
-reviews_df = sqlContext.read.option("mode", "DROPMALFORMED").option('charset', 'UTF-8').json("s3a://amazon-review-insight/item_dedup*.json")
-reviews_df = reviews_df.toDF("asin", "helpful", "overall", "reviewText", "reviewTimeStr",
-                             "reviewerID", "reviewerName", "summary", "unixReviewTime")
+reviews_df = sqlContext.read.option("mode", "DROPMALFORMED").option('charset', 'UTF-8').parquet("s3a://amazon-review-insight/reviews_for_topics_cache").toDF("asin", "reviewText", "reviewerID")
 
 def process_topics(reviewText):
     topics = set()
@@ -53,7 +50,4 @@ to_topics = udf(process_topics, ArrayType(StringType()))
 
 reviews_topics_df = reviews_df.withColumn('topic', explode(to_topics(reviews_df.reviewText))).select('asin', 'reviewerID', 'topic')
 
-#reviews_topics_df = reviews_topics_df.where(reviews_topics_df.asin.isNotNull() & 
-#					     reviews_topics_df.reviewerID.isNotNull() & 
-#					     reviews_topics_df.topic.isNotNull())
 reviews_topics_df.write.jdbc(url=url, table='review_topics_tmp', mode=mode, properties=properties)
