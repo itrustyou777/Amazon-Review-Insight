@@ -1,8 +1,16 @@
 from flask import Flask, render_template, request, g
+from huey.contrib.minimal import MiniHuey
+from gevent import monkey; monkey.patch_all()
 import db
 import boto3
 import json
 import re
+import time
+import os
+
+# task queue for incremental processing runs
+huey = MiniHuey(pool_size=1)
+huey.start()
 
 app = Flask(__name__)
 
@@ -24,6 +32,12 @@ def index():
 
     return render_template('index.html', q=q, products=products)
 
+@huey.task()
+def start_incremental_processing():
+    """This is going to run asynchronous in a the huey queue
+    """
+    os.system(os.path.expanduser("cd ~/ && ./incremental_processing.sh"))
+
 @app.route('/topics', methods=['GET', 'POST'])
 def topics():
     message = ''
@@ -37,6 +51,8 @@ def topics():
         json.dump(json_obj, open('topic_rules.json', 'w'))
 	bucket.upload_file('topic_rules.json', 'topic_rules.json')
 	message = "Topic Rules Saved! Processing..."
+
+        async_result = start_incremental_processing()
 
     return render_template('topics.html', json_obj=json_obj, message=message)
     
