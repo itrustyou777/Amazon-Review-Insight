@@ -32,6 +32,10 @@ def index():
 
     return render_template('index.html', q=q, products=products)
 
+@app.route('/talk')
+def talk():
+    return render_template('talk.html')
+
 @huey.task()
 def start_incremental_processing():
     """This is going to run asynchronous in a the huey queue
