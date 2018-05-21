@@ -28,4 +28,5 @@ I developed an interactive dashboard that displays Amazon product reviews classi
 
 
 ## Author
-Miji Kim
+[Miji Kim](https://www.linkedin.com/in/mijik/ "Miji's Linkedin")
+
