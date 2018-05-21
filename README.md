@@ -11,10 +11,10 @@ I developed an interactive dashboard that displays Amazon product reviews classi
 ## Archtecture
 ![alt text](https://github.com/itrustyou777/Amazon-Review-Insight/blob/master/data-pipeline.png "DataPipeLine")
 
-S3 -- storage for Amazon review and product data.
-Spark -- cleaning data, pre-aggregating, pre-calculating, classifying reviews by topics, loading data to PostgreSQL.
-PostgreSQL -- database, querying
-Flask -- dashboard 
+* S3 -- storage for Amazon review and product data.
+* Spark -- cleaning data, pre-aggregating, pre-calculating, classifying reviews by topics, loading data to PostgreSQL.
+* PostgreSQL -- database, querying
+* Flask -- dashboard 
 
 ## Challenges
 
