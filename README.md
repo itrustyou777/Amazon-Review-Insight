@@ -23,9 +23,6 @@ I developed an interactive dashboard that displays Amazon product reviews classi
 * Query optimization -- the main queries used in the dashboard, especially product and reviews search, and displaying charts
 * Handling incremental updates of topics when new topic rules are added or modified
 
-## Prerequisites & installation
-[TBD]
-
 
 ## Author
 [Miji Kim](https://www.linkedin.com/in/mijik/ "Miji's Linkedin")
