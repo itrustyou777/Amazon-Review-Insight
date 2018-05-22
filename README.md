@@ -6,7 +6,7 @@ These days feedback from customers' reviews is crucial to online businesses. In 
 I developed an interactive dashboard that displays Amazon product reviews classified by topics. Specifically, the topics are price, delivery, function, appearance, and service. The dashboard also allows you to add new topics or edit existing topics. Furthermore, there is a fast search for products and reviews.
 
 ## Demo
-[TBD] 
+[http://www.mijious.us](http://www.mijious.us "Amazon review insight")
 
 ## Archtecture
 ![alt text](https://github.com/itrustyou777/Amazon-Review-Insight/blob/master/data-pipeline.png "DataPipeLine")
